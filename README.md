@@ -110,28 +110,9 @@ FunFight LoL은 친구들과 LoL 플레이를 하면서 **딜량·받은 피해�
 * 미니 그래프
 * 반응형 카드 레이아웃
 
----
 
-# 6️⃣ 사용자 데이터 저장 문제
 
-### 옵션
-
-| 저장 방식          | 특징           | 비고                 |
-| -------------- | ------------ | ------------------ |
-| LocalStorage   | 새로고침 유지      | PC방 환경에서는 흔적 남아 위험 |
-| SessionStorage | 새 탭/창 닫으면 삭제 | 새로고침은 유지됨          |
-| 쿠키             | 새로고침 유지      | API 키 노출 X         |
-| DB             | 가장 안전        | 토이 프로젝트면 과함        |
-
-### 결론
-
-로그인 없고 토이 프로젝트 기준:
-→ **SessionStorage** 또는 **URL 파라미터/해시 기반 임시 저장**이 가장 적합
-(PC방에서 개인정보 남을 가능성 최소화)
-
----
-
-# 7️⃣ Data Dragon 정리
+# 6️⃣  Data Dragon 정리
 
 * Riot이 제공하는 **정적 데이터 + 이미지 리소스** 저장소
 * 챔피언/아이템/룬/스펠/아이콘 전부 포함
@@ -148,7 +129,7 @@ https://ddragon.leagueoflegends.com/cdn/{version}/data/ko_KR/champion/Ahri.json
 
 ---
 
-# 8️⃣ FunFight LoL Product Description (영문/국문 버전)
+# 7️⃣ FunFight LoL Product Description (영문/국문 버전)
 
 ## 🇺🇸 English
 
@@ -164,14 +145,12 @@ FunFight LoL은 친구들과 함께 리그 오브 레전드를 더욱 재미있�
 
 ---
 
-# 💾 9️⃣ 최종 결론
+# 💾 8️⃣ 요약
 
-* **Next.js 기반**으로 개발하면 “비동기 + 시각화 + 배포" 모두 완벽
+* **Next.js 기반**으로 개발
 * Data Dragon 사용하면 챔피언 이미지/UI 제작 편리
 * 주기적 데이터 업데이트는 Polling으로 구현
-* 저장은 SessionStorage 또는 URL 기반 임시 저장
 * Production 키 필요 시 Riot 검토 신청
-* 일단은 토이 프로젝트 → DB 없이도 충분
 
 
 
