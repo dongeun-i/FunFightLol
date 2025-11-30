@@ -172,3 +172,6 @@ FunFight LoL은 친구들과 함께 리그 오브 레전드를 더욱 재미있�
 * 저장은 SessionStorage 또는 URL 기반 임시 저장
 * Production 키 필요 시 Riot 검토 신청
 * 일단은 토이 프로젝트 → DB 없이도 충분
+
+
+
