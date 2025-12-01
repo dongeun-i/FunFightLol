@@ -58,12 +58,14 @@ export default function GamePage() {
     if (!session) return;
 
     // 더미 매치 데이터 추가 (실제로는 API 호출)
-    // 같은 매치의 모든 플레이어는 같은 timestamp를 가져야 함
+    // 같은 매치의 모든 플레이어는 같은 timestamp와 같은 승패를 가져야 함
     const matchTimestamp = Date.now() - (session.matches.length * 1000 * 60 * 30);
+    const matchWin = Math.random() > 0.5; // 같은 매치의 모든 플레이어는 같은 승패
     const newMatches: MatchStats[] = session.summoners.map((summoner, index) => {
       const match = generateDummyMatch(summoner.name, session.matches.length + 1);
-      // 같은 매치의 모든 플레이어는 같은 timestamp를 가짐
+      // 같은 매치의 모든 플레이어는 같은 timestamp와 같은 승패를 가짐
       match.timestamp = matchTimestamp;
+      match.win = matchWin;
       return match;
     });
 
