@@ -13,14 +13,12 @@ export default function PlayerCard({ match, challengeOptions, isCompact = false 
     switch (optionId) {
       case "damage":
         return match.damage.toLocaleString();
-      case "damageTaken":
-        return match.damageTaken.toLocaleString();
-      case "cs":
-        return match.cs;
-      case "turretDamage":
-        return match.turretDamage.toLocaleString();
+      case "gold":
+        return match.gold.toLocaleString();
       case "kda":
         return ((match.kills + match.assists) / (match.deaths || 1)).toFixed(2);
+      case "score":
+        return "-"; // 점수는 매치별로 계산 불가
       default:
         return "-";
     }
@@ -29,10 +27,9 @@ export default function PlayerCard({ match, challengeOptions, isCompact = false 
   const getStatLabel = (optionId: string) => {
     const labels: Record<string, string> = {
       damage: "딜",
-      damageTaken: "받은피해",
-      cs: "CS",
-      turretDamage: "포탑",
+      gold: "골드",
       kda: "KDA",
+      score: "점수",
     };
     return labels[optionId] || optionId;
   };
@@ -204,4 +201,5 @@ export default function PlayerCard({ match, challengeOptions, isCompact = false 
     </div>
   );
 }
+
 

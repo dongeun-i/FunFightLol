@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import ThemeToggle from "@/components/ThemeToggle";
 import Button from "@/components/Button";
 import MatchRow from "@/components/MatchRow";
 import StatChart from "@/components/StatChart";
+import Header from "@/components/Header";
 import { GameSession, MatchStats } from "@/lib/types";
 import { getSession, saveSession } from "@/lib/storage";
 
@@ -16,9 +16,8 @@ function generateDummyMatch(summonerName: string, matchNumber: number): MatchSta
     summonerName,
     champion: ["Aatrox", "Ahri", "Yasuo", "Jinx", "Thresh"][Math.floor(Math.random() * 5)],
     damage: Math.floor(Math.random() * 50000) + 10000,
-    damageTaken: Math.floor(Math.random() * 30000) + 10000,
     cs: Math.floor(Math.random() * 200) + 100,
-    turretDamage: Math.floor(Math.random() * 5000) + 1000,
+    gold: Math.floor(Math.random() * 15000) + 8000,
     kills: Math.floor(Math.random() * 15),
     deaths: Math.floor(Math.random() * 10),
     assists: Math.floor(Math.random() * 20),
@@ -38,16 +37,20 @@ export default function GamePage() {
       router.push("/");
       return;
     }
-    if (!saved.challengeOptions || saved.challengeOptions.length === 0) {
+    if (!saved.challengeOptions || saved.challengeOptions === "") {
       router.push("/settings");
       return;
     }
 
     const gameSession: GameSession = {
       summoners: saved.summoners || [],
-      challengeOptions: saved.challengeOptions || [],
+      challengeOptions: saved.challengeOptions || "",
       matches: saved.matches || [],
       startTime: saved.startTime || Date.now(),
+      maxMatches: saved.maxMatches,
+      scoreConfig: saved.scoreConfig,
+      handicaps: saved.handicaps,
+      invalidMatches: saved.invalidMatches || [],
     };
 
     setSession(gameSession);
@@ -56,6 +59,12 @@ export default function GamePage() {
 
   const handleRefresh = () => {
     if (!session) return;
+
+    // 최대 판수 체크
+    if (session.maxMatches && session.matches.length >= session.maxMatches) {
+      alert(`최대 판수(${session.maxMatches}판)에 도달했습니다.`);
+      return;
+    }
 
     // 더미 매치 데이터 추가 (실제로는 API 호출)
     // 같은 매치의 모든 플레이어는 같은 timestamp와 같은 승패를 가져야 함
@@ -84,17 +93,41 @@ export default function GamePage() {
 
   if (isLoading || !session) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-zinc-950">
         <div className="text-black dark:text-zinc-50">로딩 중...</div>
       </div>
     );
   }
 
+  const handleToggleInvalid = (matchId: string) => {
+    if (!session) return;
+    
+    const invalidMatches = session.invalidMatches || [];
+    const isInvalid = invalidMatches.includes(matchId);
+    
+    const updatedInvalidMatches = isInvalid
+      ? invalidMatches.filter(id => id !== matchId)
+      : [...invalidMatches, matchId];
+    
+    const updatedSession: GameSession = {
+      ...session,
+      invalidMatches: updatedInvalidMatches,
+    };
+    
+    setSession(updatedSession);
+    saveSession(updatedSession);
+  };
+
   // 챌린지별 통계 계산
-  const getLeaderboard = (optionId: string) => {
+  const getLeaderboard = () => {
+    if (!session.challengeOptions) return [];
+    
+    const invalidMatches = session.invalidMatches || [];
+    
+    const optionId = session.challengeOptions;
     const stats = session.summoners.map((summoner) => {
       const summonerMatches = session.matches.filter(
-        (m) => m.summonerName === summoner.name
+        (m) => m.summonerName === summoner.name && !invalidMatches.includes(m.matchId)
       );
       let total = 0;
 
@@ -102,21 +135,36 @@ export default function GamePage() {
         case "damage":
           total = summonerMatches.reduce((sum, m) => sum + m.damage, 0);
           break;
-        case "damageTaken":
-          total = summonerMatches.reduce((sum, m) => sum + m.damageTaken, 0);
+        case "gold":
+          total = summonerMatches.reduce((sum, m) => sum + m.gold, 0);
           break;
-        case "cs":
-          total = summonerMatches.reduce((sum, m) => sum + m.cs, 0);
-          break;
-        case "turretDamage":
-          total = summonerMatches.reduce((sum, m) => sum + m.turretDamage, 0);
+        case "score":
+          const scoreConfig = session.scoreConfig || { kill: 300, death: -100, assist: 150, cs: 1, csPerPoint: 10 };
+          total = summonerMatches.reduce((sum, m) => {
+            const kdaScore = (m.kills * scoreConfig.kill) + (m.deaths * scoreConfig.death) + (m.assists * scoreConfig.assist);
+            const csScore = Math.floor(m.cs / scoreConfig.csPerPoint) * scoreConfig.cs;
+            return sum + kdaScore + csScore;
+          }, 0);
           break;
         case "kda":
           const kills = summonerMatches.reduce((sum, m) => sum + m.kills, 0);
           const deaths = summonerMatches.reduce((sum, m) => sum + m.deaths, 0);
           const assists = summonerMatches.reduce((sum, m) => sum + m.assists, 0);
-          total = deaths === 0 ? kills + assists : (kills + assists) / deaths;
+          const kdaValue = deaths === 0 ? kills + assists : (kills + assists) / deaths;
+          total = parseFloat(kdaValue.toFixed(2));
           break;
+      }
+
+      // 핸디캡 적용
+      const handicap = session.handicaps?.find(
+        (h) => h.optionId === optionId && h.summonerName === summoner.name
+      );
+      if (handicap) {
+        total += handicap.value;
+        // KDA의 경우 핸디캡 적용 후에도 소수점 2째자리로 반올림
+        if (optionId === "kda") {
+          total = parseFloat(total.toFixed(2));
+        }
       }
 
       return { summoner, total, matches: summonerMatches.length };
@@ -127,117 +175,128 @@ export default function GamePage() {
 
   const challengeLabels: Record<string, string> = {
     damage: "딜량",
-    damageTaken: "받은 피해량",
-    cs: "CS",
-    turretDamage: "포탑 기여도",
+    gold: "골드 획득량",
+    score: "점수",
     kda: "KDA",
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-zinc-50 via-white to-zinc-50 font-sans dark:from-black dark:via-zinc-950 dark:to-black">
-      <main className="flex min-h-screen w-full max-w-6xl flex-col py-8 sm:py-16 px-4 sm:px-8 bg-white dark:bg-black relative shadow-xl dark:shadow-zinc-900/50">
-        {/* 다크모드 토글 버튼 */}
-        <div className="absolute top-4 sm:top-6 right-4 sm:right-6 z-10">
-          <ThemeToggle />
-        </div>
-
+    <div className="flex min-h-screen items-center justify-center bg-white dark:bg-zinc-950 font-sans">
+      <main className="flex min-h-screen w-full max-w-7xl flex-col md:py-16 px-4 sm:px-8 md:px-16 bg-white dark:bg-zinc-950 relative">
         {/* 헤더 */}
-        <div className="mb-6 sm:mb-8 mt-12 sm:mt-16">
-          <h1 className="text-2xl sm:text-3xl font-semibold text-black dark:text-zinc-50 mb-2">
+        <Header />
+        
+        {/* 페이지 헤더 */}
+        <div className="mb-8 sm:mb-10">
+          <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 bg-clip-text text-transparent mb-2">
             게임 진행 중
-          </h1>
-          <p className="text-base text-zinc-600 dark:text-zinc-400">
-            매치 수: {session.matches.length} / 참가자: {session.summoners.length}명
+          </h2>
+          <p className="text-base sm:text-lg text-zinc-600 dark:text-zinc-400">
+            매치 수: {(() => {
+              const invalidMatches = session.invalidMatches || [];
+              const validMatches = new Set(
+                session.matches
+                  .filter(m => !invalidMatches.includes(m.matchId))
+                  .map(m => m.timestamp)
+              );
+              return validMatches.size;
+            })()} / 참가자: {session.summoners.length}명
           </p>
         </div>
 
         {/* 액션 버튼 */}
         <div className="flex gap-3 mb-6 sm:mb-8">
-          <Button onClick={handleRefresh} variant="secondary" className="flex-1">
+          <Button onClick={handleRefresh} variant="secondary" size="md" className="flex-1">
             새로고침 (더미 매치 추가)
           </Button>
-          <Button onClick={handleEndGame} variant="primary" className="flex-1">
+          <Button onClick={handleEndGame} variant="primary" size="md" className="flex-1">
             게임 종료
           </Button>
         </div>
 
-        {/* 챌린지별 리더보드 */}
-        <div className="mb-6 sm:mb-8">
-          <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-4">
-            챌린지 리더보드
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {session.challengeOptions.map((optionId) => {
-              const leaderboard = getLeaderboard(optionId);
-              return (
-                <div
-                  key={optionId}
-                  className="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800"
-                >
-                  <h3 className="font-semibold text-black dark:text-zinc-50 mb-3">
-                    {challengeLabels[optionId]}
-                  </h3>
-                  <div className="space-y-2 mb-3">
-                    {leaderboard.map((stat, index) => (
-                      <div
-                        key={stat.summoner.name}
-                        className="flex items-center justify-between text-sm"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                              index === 0
-                                ? "bg-yellow-500 text-white"
-                                : index === 1
-                                ? "bg-zinc-400 text-white"
-                                : index === 2
-                                ? "bg-orange-600 text-white"
-                                : "bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-400"
-                            }`}
-                          >
-                            {index + 1}
-                          </span>
-                          <span className="text-black dark:text-zinc-50">
-                            {stat.summoner.name}
-                          </span>
-                        </div>
+        {/* 챌린지 리더보드 */}
+        {session.challengeOptions && (
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-4">
+              챌린지 리더보드
+            </h2>
+            <div className="p-4 sm:p-6 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800">
+              <h3 className="text-lg font-semibold text-black dark:text-zinc-50 mb-4">
+                {challengeLabels[session.challengeOptions]}
+              </h3>
+              <div className="space-y-3 mb-4">
+                {getLeaderboard().map((stat, index) => {
+                  const leaderboard = getLeaderboard();
+                  const firstPlaceValue = leaderboard[0]?.total || 0;
+                  const gap = index > 0 && firstPlaceValue > 0 ? firstPlaceValue - stat.total : 0;
+                  
+                  return (
+                    <div
+                      key={stat.summoner.name}
+                      className="flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                            index === 0
+                              ? "bg-yellow-500 text-white"
+                              : index === 1
+                              ? "bg-zinc-400 text-white"
+                              : index === 2
+                              ? "bg-orange-600 text-white"
+                              : "bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-400"
+                          }`}
+                        >
+                          {index + 1}
+                        </span>
+                        <span className="text-black dark:text-zinc-50">
+                          {stat.summoner.name}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-end">
                         <span className="font-semibold text-black dark:text-zinc-50">
-                          {optionId === "kda"
+                          {session.challengeOptions === "kda"
                             ? stat.total.toFixed(2)
                             : stat.total.toLocaleString()}
                         </span>
+                        {gap > 0 && (
+                          <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                            {session.challengeOptions === "kda"
+                              ? `(-${gap.toFixed(2)})`
+                              : `(-${gap.toLocaleString()})`}
+                          </span>
+                        )}
                       </div>
-                    ))}
-                  </div>
-                  {/* 미니 그래프 */}
-                  {session.matches.length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-700">
-                      <StatChart
-                        data={leaderboard.map((stat) => ({
-                          name: stat.summoner.name.length > 6 
-                            ? stat.summoner.name.substring(0, 6) + "..." 
-                            : stat.summoner.name,
-                          value: optionId === "kda" 
-                            ? parseFloat(stat.total.toFixed(2)) 
-                            : stat.total,
-                        }))}
-                        type="bar"
-                        dataKey="value"
-                        color={
-                          optionId === "damage" ? "#ef4444" :
-                          optionId === "damageTaken" ? "#3b82f6" :
-                          optionId === "cs" ? "#10b981" :
-                          optionId === "turretDamage" ? "#f59e0b" :
-                          "#a855f7"
-                        }
-                      />
                     </div>
-                  )}
+                  );
+                })}
+              </div>
+              {/* 미니 그래프 */}
+              {session.matches.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-700">
+                  <StatChart
+                    data={getLeaderboard().map((stat) => ({
+                      name: stat.summoner.name.length > 6 
+                        ? stat.summoner.name.substring(0, 6) + "..." 
+                        : stat.summoner.name,
+                      value: session.challengeOptions === "kda" 
+                        ? parseFloat(stat.total.toFixed(2)) 
+                        : stat.total,
+                    }))}
+                    type="bar"
+                    dataKey="value"
+                    color={
+                      session.challengeOptions === "damage" ? "#ef4444" :
+                      session.challengeOptions === "gold" ? "#f59e0b" :
+                      session.challengeOptions === "score" ? "#a855f7" :
+                      "#3b82f6"
+                    }
+                  />
                 </div>
-              );
-            })}
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* 매치 히스토리 */}
         <div>
@@ -266,14 +325,21 @@ export default function GamePage() {
                 const sortedGroups = Array.from(matchGroups.entries())
                   .sort((a, b) => b[0] - a[0]); // 최신 매치가 먼저
 
-                return sortedGroups.map(([timestamp, matches], index) => (
-                  <MatchRow
-                    key={timestamp}
-                    matches={matches}
-                    challengeOptions={session.challengeOptions}
-                    matchNumber={sortedGroups.length - index}
-                  />
-                ));
+                return sortedGroups.map(([timestamp, matches], index) => {
+                  const matchId = matches[0]?.matchId || '';
+                  const isInvalid = session.invalidMatches?.includes(matchId) || false;
+                  
+                  return (
+                    <MatchRow
+                      key={timestamp}
+                      matches={matches}
+                      challengeOptions={[session.challengeOptions]}
+                      matchNumber={sortedGroups.length - index}
+                      isInvalid={isInvalid}
+                      onToggleInvalid={() => handleToggleInvalid(matchId)}
+                    />
+                  );
+                });
               })()}
             </div>
           )}

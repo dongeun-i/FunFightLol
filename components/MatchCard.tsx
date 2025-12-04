@@ -12,14 +12,12 @@ export default function MatchCard({ match, challengeOptions }: MatchCardProps) {
     switch (optionId) {
       case "damage":
         return match.damage.toLocaleString();
-      case "damageTaken":
-        return match.damageTaken.toLocaleString();
-      case "cs":
-        return match.cs;
-      case "turretDamage":
-        return match.turretDamage.toLocaleString();
+      case "gold":
+        return match.gold.toLocaleString();
       case "kda":
         return ((match.kills + match.assists) / (match.deaths || 1)).toFixed(2);
+      case "score":
+        return "-"; // 점수는 매치별로 계산 불가
       default:
         return "-";
     }
@@ -28,10 +26,9 @@ export default function MatchCard({ match, challengeOptions }: MatchCardProps) {
   const getStatLabel = (optionId: string) => {
     const labels: Record<string, string> = {
       damage: "딜량",
-      damageTaken: "받은 피해",
-      cs: "CS",
-      turretDamage: "포탑 피해",
+      gold: "골드",
       kda: "KDA",
+      score: "점수",
     };
     return labels[optionId] || optionId;
   };
@@ -119,4 +116,5 @@ export default function MatchCard({ match, challengeOptions }: MatchCardProps) {
     </div>
   );
 }
+
 

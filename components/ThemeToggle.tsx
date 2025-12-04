@@ -20,12 +20,12 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-all duration-200 hover:scale-110 active:scale-95"
+      className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-all duration-200 hover:scale-110 active:scale-95"
       aria-label="다크모드 토글"
     >
       {theme === "dark" ? (
         <svg
-          className="w-5 h-5 sm:w-6 sm:h-6 text-zinc-800 dark:text-zinc-200 transition-transform duration-300"
+          className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-800 dark:text-zinc-200 transition-transform duration-300"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -39,7 +39,7 @@ export default function ThemeToggle() {
         </svg>
       ) : (
         <svg
-          className="w-5 h-5 sm:w-6 sm:h-6 text-zinc-800 dark:text-zinc-200 transition-transform duration-300"
+          className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-800 dark:text-zinc-200 transition-transform duration-300"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -55,4 +55,5 @@ export default function ThemeToggle() {
     </button>
   );
 }
+
 

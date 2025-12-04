@@ -20,9 +20,9 @@ export default function Button({
   const baseStyles = "rounded-lg font-medium transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100";
   
   const variantStyles = {
-    primary: "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200",
+    primary: "bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 text-white font-bold shadow-lg shadow-amber-700/40 hover:from-amber-500 hover:via-amber-600 hover:to-amber-700 hover:shadow-amber-600/50",
     secondary: "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-300 dark:hover:bg-zinc-700",
-    outline: "border-2 border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-900 dark:hover:bg-zinc-100 hover:text-white dark:hover:text-zinc-900"
+    outline: "border-2 border-amber-600 text-amber-700 dark:text-amber-500 hover:bg-amber-600 hover:text-white dark:hover:text-white"
   };
 
   const sizeStyles = {
@@ -40,4 +40,5 @@ export default function Button({
     </button>
   );
 }
+
 
