@@ -197,12 +197,134 @@ FunFight LoL은 친구들과 함께 리그 오브 레전드를 더욱 재미있�
 
 ---
 
-# 💾 9️⃣ 요약
+# 📸 이미지 사용 방법
+
+## 정적 이미지 파일
+
+Next.js에서는 **`public` 폴더**에 이미지를 넣으면 됩니다.
+
+### 폴더 구조
+```
+public/
+  ├── imgs/          # 이미지 파일들
+  │   ├── logo.png
+  │   └── icon.svg
+  └── favicon.ico
+```
+
+### 사용 방법
+
+#### 1. 일반 img 태그 사용
+```tsx
+// public/imgs/logo.png 파일이 있다면
+<img src="/imgs/logo.png" alt="로고" />
+
+// public/logo.png 파일이 있다면
+<img src="/logo.png" alt="로고" />
+```
+
+#### 2. Next.js Image 컴포넌트 사용 (권장)
+```tsx
+import Image from 'next/image';
+
+<Image 
+  src="/imgs/logo.png" 
+  alt="로고" 
+  width={200} 
+  height={200}
+/>
+```
+
+### 주의사항
+- `public` 폴더의 파일은 루트 경로(`/`)로 접근 가능
+- `public/imgs/logo.png` → `/imgs/logo.png`
+- 빌드 시 `public` 폴더의 모든 파일이 그대로 배포됨
+- Vercel 배포 시에도 `public` 폴더의 이미지가 자동으로 포함됨
+
+### 외부 이미지 URL 사용
+```tsx
+// 외부 URL 직접 사용 가능
+<img src="https://example.com/image.png" alt="외부 이미지" />
+
+// Data Dragon 이미지 사용 예시
+<img 
+  src="https://ddragon.leagueoflegends.com/cdn/14.1.1/img/champion/Ahri.png" 
+  alt="Ahri"
+/>
+```
+
+---
+
+# 🚀 9️⃣ Vercel 배포 가이드
+
+## 배포 준비
+
+### 1. GitHub에 프로젝트 푸시
+```bash
+git add .
+git commit -m "Initial commit"
+git remote add origin <your-github-repo-url>
+git push -u origin main
+```
+
+### 2. Vercel 배포
+
+#### 방법 1: Vercel 웹사이트에서 배포
+1. [Vercel](https://vercel.com)에 로그인
+2. "Add New Project" 클릭
+3. GitHub 저장소 선택
+4. 프로젝트 설정:
+   - **Framework Preset**: Next.js (자동 감지)
+   - **Root Directory**: `./` (기본값)
+   - **Build Command**: `npm run build` (기본값)
+   - **Output Directory**: `.next` (기본값)
+5. "Deploy" 클릭
+
+#### 방법 2: Vercel CLI로 배포
+```bash
+# Vercel CLI 설치
+npm i -g vercel
+
+# 배포
+vercel
+
+# 프로덕션 배포
+vercel --prod
+```
+
+### 3. 환경 변수 설정 (필요한 경우)
+Vercel 대시보드에서:
+1. 프로젝트 선택
+2. Settings → Environment Variables
+3. 필요한 환경 변수 추가 (예: API 키 등)
+
+### 4. 배포 확인
+- 배포 완료 후 제공되는 URL로 접속
+- 모든 페이지가 정상 작동하는지 확인
+
+## 배포 후 확인 사항
+
+✅ 빌드 성공 여부 확인
+✅ 모든 페이지 라우팅 정상 작동
+✅ 다크모드 토글 정상 작동
+✅ SessionStorage 기능 정상 작동
+✅ 반응형 디자인 확인
+
+## 주의사항
+
+⚠️ **SessionStorage 사용**: 현재 프로젝트는 브라우저의 SessionStorage를 사용하므로, 새 탭이나 브라우저를 닫으면 데이터가 초기화됩니다.
+
+⚠️ **데이터 영구 저장 필요 시**: 실제 서비스에서는 데이터베이스(예: Vercel Postgres, Supabase) 또는 API 서버를 연동해야 합니다.
+
+---
+
+# 💾 🔟 요약
 
 * **Next.js 기반**으로 개발
 * Data Dragon 사용하면 챔피언 이미지/UI 제작 편리
 * 주기적 데이터 업데이트는 Polling으로 구현
 * Production 키 필요 시 Riot 검토 신청
+* **Vercel 배포 가능** (빌드 테스트 완료)
 
 
 

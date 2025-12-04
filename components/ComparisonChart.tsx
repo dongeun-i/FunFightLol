@@ -50,7 +50,6 @@ export default function ComparisonChart({
             border: "1px solid var(--tw-color-zinc-300)",
             borderRadius: "8px",
           }}
-          className="dark:bg-zinc-800 dark:border-zinc-700"
         />
         <Legend />
         {keys.map((key, index) => (
