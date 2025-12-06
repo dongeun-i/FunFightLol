@@ -2,6 +2,7 @@
 
 **(Summary of discussion with ChatGPT)**
 
+
 ## 📌 개요
 
 FunFight LoL은 친구들과 LoL 플레이를 하면서 **딜량·받은 피해량·CS·포탑 기여도**와 같은 지표를 기반으로 **친선 챌린지**를 진행할 수 있도록 하는 웹 기반 도구다.
