@@ -8,6 +8,8 @@ import StatChart from "@/components/StatChart";
 import Header from "@/components/Header";
 import { GameSession, MatchStats } from "@/lib/types";
 import { getSession, saveSession } from "@/lib/storage";
+import { generateLeaderboard } from "@/lib/calculations";
+import { CHALLENGE_LABELS } from "@/lib/constants";
 
 // 더미 매치 데이터 생성 함수
 function generateDummyMatch(summonerName: string, matchNumber: number): MatchStats {
@@ -118,73 +120,8 @@ export default function GamePage() {
     saveSession(updatedSession);
   };
 
-  // 챌린지별 통계 계산
-  const getLeaderboard = () => {
-    if (!session.challengeOptions) return [];
-    
-    const invalidMatches = session.invalidMatches || [];
-    
-    const optionId = session.challengeOptions;
-    const stats = session.summoners.map((summoner) => {
-      const summonerMatches = session.matches.filter(
-        (m) => m.summonerName === summoner.name && !invalidMatches.includes(m.matchId)
-      );
-      let total = 0;
-
-      switch (optionId) {
-        case "damage":
-          total = summonerMatches.reduce((sum, m) => sum + m.damage, 0);
-          break;
-        case "gold":
-          total = summonerMatches.reduce((sum, m) => sum + m.gold, 0);
-          break;
-        case "score":
-          const scoreConfig = session.scoreConfig || { kill: 300, death: -100, assist: 150, cs: 1, csPerPoint: 10 };
-          total = summonerMatches.reduce((sum, m) => {
-            const kdaScore = (m.kills * scoreConfig.kill) + (m.deaths * scoreConfig.death) + (m.assists * scoreConfig.assist);
-            const csScore = Math.floor(m.cs / scoreConfig.csPerPoint) * scoreConfig.cs;
-            return sum + kdaScore + csScore;
-          }, 0);
-          break;
-        case "kda":
-          const kills = summonerMatches.reduce((sum, m) => sum + m.kills, 0);
-          const deaths = summonerMatches.reduce((sum, m) => sum + m.deaths, 0);
-          const assists = summonerMatches.reduce((sum, m) => sum + m.assists, 0);
-          const kdaValue = deaths === 0 ? kills + assists : (kills + assists) / deaths;
-          total = parseFloat(kdaValue.toFixed(2));
-          break;
-      }
-
-      // 핸디캡 적용
-      const handicap = session.handicaps?.find(
-        (h) => h.optionId === optionId && h.summonerName === summoner.name
-      );
-      if (handicap) {
-        if (optionId === "damage" || optionId === "gold") {
-          // 딜량/골드는 %로 적용 (예: 10% = 1.1배)
-          total = total * (1 + handicap.value / 100);
-        } else if (optionId === "kda") {
-          // KDA는 직접 더하기
-          total = total + handicap.value;
-          total = parseFloat(total.toFixed(2));
-        } else {
-          // 점수는 직접 더하기
-          total += handicap.value;
-        }
-      }
-
-      return { summoner, total, matches: summonerMatches.length };
-    });
-
-    return stats.sort((a, b) => b.total - a.total);
-  };
-
-  const challengeLabels: Record<string, string> = {
-    damage: "딜량",
-    gold: "골드 획득량",
-    score: "점수",
-    kda: "KDA",
-  };
+  // 리더보드 조회 (리팩토링된 함수 사용)
+  const leaderboard = generateLeaderboard(session);
 
   return (
     <div className="flex min-h-screen items-center justify-center font-sans">
@@ -228,11 +165,10 @@ export default function GamePage() {
             </h2>
             <div className="p-4 sm:p-6 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800">
               <h3 className="text-lg font-semibold text-black dark:text-zinc-50 mb-4">
-                {challengeLabels[session.challengeOptions]}
+                {CHALLENGE_LABELS[session.challengeOptions]}
               </h3>
               <div className="space-y-3 mb-4">
-                {getLeaderboard().map((stat, index) => {
-                  const leaderboard = getLeaderboard();
+                {leaderboard.map((stat, index) => {
                   const firstPlaceValue = leaderboard[0]?.total || 0;
                   const gap = index > 0 && firstPlaceValue > 0 ? firstPlaceValue - stat.total : 0;
                   
@@ -281,7 +217,7 @@ export default function GamePage() {
               {session.matches.length > 0 && (
                 <div className="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-700">
                   <StatChart
-                    data={getLeaderboard().map((stat) => ({
+                    data={leaderboard.map((stat) => ({
                       name: stat.summoner.name.length > 6 
                         ? stat.summoner.name.substring(0, 6) + "..." 
                         : stat.summoner.name,

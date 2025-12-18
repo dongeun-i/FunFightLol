@@ -4,42 +4,23 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/Button";
 import Header from "@/components/Header";
-import { ChallengeOption, Handicap } from "@/lib/types";
+import { Handicap } from "@/lib/types";
 import { getSummoners, saveSession } from "@/lib/storage";
-
-const CHALLENGE_OPTIONS: ChallengeOption[] = [
-  {
-    id: "damage",
-    name: "딜량",
-    description: "가장 높은 딜량을 기록한 소환사",
-    icon: "⚔️",
-  },
-  {
-    id: "gold",
-    name: "골드 획득량",
-    description: "가장 많은 골드를 획득한 소환사",
-    icon: "🪙",
-  },
-  {
-    id: "score",
-    name: "점수",
-    description: "K/D/A/CS에 따른 점수를 계산한 소환사",
-    icon: "⭐",
-  },
-  {
-    id: "kda",
-    name: "KDA",
-    description: "가장 높은 KDA를 기록한 소환사",
-    icon: "📊",
-  },
-];
+import { CHALLENGE_OPTIONS, DEFAULT_SCORE_CONFIG } from "@/lib/constants";
+import {
+  getHandicapUnit,
+  getHandicapPlaceholder,
+  getHandicapDescription,
+  getHandicapStep,
+} from "@/lib/handicap";
+import { isChallengeSelected } from "@/lib/validators";
 
 export default function SettingsPage() {
   const router = useRouter();
   const [selectedOption, setSelectedOption] = useState<string>("");
   const [summoners, setSummoners] = useState<any[]>([]);
   const [maxMatches, setMaxMatches] = useState<number>(0); // 0이면 무제한
-  const [scoreConfig, setScoreConfig] = useState({ kill: 300, death: -100, assist: 150, cs: 1, csPerPoint: 10 });
+  const [scoreConfig, setScoreConfig] = useState(DEFAULT_SCORE_CONFIG);
   const [handicaps, setHandicaps] = useState<Record<string, number>>({}); // { summonerName: value }
   const [showHandicap, setShowHandicap] = useState<boolean>(false);
   const [isScoreConfigVisible, setIsScoreConfigVisible] = useState<boolean>(false);
@@ -200,8 +181,10 @@ export default function SettingsPage() {
   ];
 
   const handleStart = () => {
-    if (!selectedOption) {
-      alert("챌린지 항목을 선택해주세요.");
+    // 유효성 검사
+    const validation = isChallengeSelected(selectedOption);
+    if (!validation.isValid) {
+      alert(validation.message);
       return;
     }
 
@@ -508,15 +491,10 @@ export default function SettingsPage() {
                   : ""
               }`}>
                 {summoners.map((summoner) => {
-                  const isPercentage = selectedOption === "damage" || selectedOption === "gold";
-                  const isKDA = selectedOption === "kda";
-                  const unit = isPercentage ? "%" : isKDA ? "KDA" : "";
-                  const placeholder = isPercentage ? "0%" : isKDA ? "0.00" : "0";
-                  const description = isPercentage 
-                    ? "딜량/골드에 비율로 적용됩니다 (예: 10 = 10% 증가)"
-                    : isKDA
-                    ? "KDA에 직접 더해집니다 (예: 1.5 입력 시 KDA +1.5)"
-                    : "점수에 직접 더해집니다";
+                  const unit = getHandicapUnit(selectedOption);
+                  const placeholder = getHandicapPlaceholder(selectedOption);
+                  const description = getHandicapDescription(selectedOption);
+                  const step = getHandicapStep(selectedOption);
                   
                   return (
                     <div key={summoner.name} className="space-y-1">
@@ -527,14 +505,14 @@ export default function SettingsPage() {
                         <div className="flex-1 flex items-center gap-2">
                           <input
                             type="number"
-                            step={isKDA ? "0.01" : "1"}
+                            step={step}
                             value={handicaps[summoner.name] || ""}
                             onChange={(e) => {
                               const val = e.target.value;
                               if (val === "") {
                                 updateHandicap(summoner.name, 0);
                               } else {
-                                const numVal = isKDA ? parseFloat(val) : parseInt(val);
+                                const numVal = step === "0.01" ? parseFloat(val) : parseInt(val);
                                 if (!isNaN(numVal)) {
                                   updateHandicap(summoner.name, numVal);
                                 }

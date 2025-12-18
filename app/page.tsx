@@ -8,11 +8,16 @@ import SummonerList from "@/components/SummonerList";
 import Button from "@/components/Button";
 import { Summoner } from "@/lib/types";
 import { saveSummoners, getSummoners } from "@/lib/storage";
+import { MAX_SUMMONERS } from "@/lib/constants";
+import { canAddSummoner, canStartGame } from "@/lib/validators";
+import { searchSummonerClient } from "@/lib/client-api";
 
 export default function Home() {
   const router = useRouter();
   const [summoners, setSummoners] = useState<Summoner[]>([]);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // SessionStorage에서 기존 소환사 목록 불러오기
@@ -22,16 +27,61 @@ export default function Home() {
     }
   }, []);
 
-  const handleSearch = (summonerName: string) => {
-    if (summoners.length >= 5) {
-      alert("최대 5명까지만 등록할 수 있습니다.");
+  const handleSearch = async (riotId: string) => {
+    // 입력값 검증
+    if (!riotId.trim()) {
+      setError("소환사명을 입력해주세요.");
+      return;
+    }
+
+    // 최대 인원 확인
+    const validation = canAddSummoner(summoners);
+    if (!validation.isValid) {
+      setError(validation.message);
       return;
     }
     
-    const newSummoner: Summoner = { name: summonerName };
-    const updated = [...summoners, newSummoner];
-    setSummoners(updated);
-    saveSummoners(updated);
+    // 중복 확인
+    const isDuplicate = summoners.some(s => s.name === riotId);
+    if (isDuplicate) {
+      setError("이미 등록된 소환사입니다.");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // API로 소환사 검색
+      const result = await searchSummoner(riotId);
+      
+      const newSummoner: Summoner = { 
+        name: result.summoner.name,
+        puuid: result.summoner.puuid,
+        profileIconId: result.profileIconId,
+        summonerLevel: result.summonerLevel,
+      };
+      
+      const updated = [...summoners, newSummoner];
+      setSummoners(updated);
+      saveSummoners(updated);
+      
+    } catch (err: any) {
+      console.error("Failed to search summoner:", err);
+      
+      // 에러 메시지 처리
+      if (err.message.includes("소환사를 찾을 수 없습니다")) {
+        setError("소환사를 찾을 수 없습니다. Riot ID를 확인해주세요. (예: 소환사명#KR1)");
+      } else if (err.message.includes("API 키가 유효하지 않습니다")) {
+        setError("API 키 오류입니다. 관리자에게 문의해주세요.");
+      } else if (err.message.includes("요청이 너무 많습니다")) {
+        setError("요청이 너무 많습니다. 잠시 후 다시 시도해주세요.");
+      } else {
+        setError("소환사 검색 중 오류가 발생했습니다. 다시 시도해주세요.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleRemove = (index: number) => {
@@ -41,8 +91,9 @@ export default function Home() {
   };
 
   const handleNext = () => {
-    if (summoners.length < 2) {
-      alert("최소 2명 이상의 소환사를 등록해주세요.");
+    const validation = canStartGame(summoners);
+    if (!validation.isValid) {
+      alert(validation.message);
       return;
     }
     // 설정 페이지로 이동
@@ -99,13 +150,20 @@ export default function Home() {
           </div>
 
           {/* 소환사 검색 */}
-          <SearchBar onSearch={handleSearch} />
+          <SearchBar onSearch={handleSearch} isLoading={isLoading} />
+          
+          {/* 에러 메시지 */}
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 animate-fade-in">
+              <p className="text-red-600 dark:text-red-400 text-sm sm:text-base">{error}</p>
+            </div>
+          )}
 
           {/* 소환사 리스트 */}
           <SummonerList 
             summoners={summoners} 
             onRemove={handleRemove}
-            maxSummoners={5}
+            maxSummoners={MAX_SUMMONERS}
           />
 
           {/* 다음 단계 버튼 */}

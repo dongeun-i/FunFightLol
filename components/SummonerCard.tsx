@@ -1,8 +1,11 @@
 "use client";
 
+import { getProfileIconUrl } from "@/lib/api/data-dragon";
+
 interface SummonerCardProps {
   name: string;
-  avatar?: string;
+  profileIconId?: number;
+  summonerLevel?: number;
   onRemove?: () => void;
   index: number;
   isRemoving?: boolean;
@@ -10,21 +13,30 @@ interface SummonerCardProps {
 
 export default function SummonerCard({ 
   name, 
-  avatar, 
+  profileIconId,
+  summonerLevel,
   onRemove,
   index,
   isRemoving = false
 }: SummonerCardProps) {
+  const profileIconUrl = profileIconId ? getProfileIconUrl(profileIconId) : null;
   return (
     <li className={`flex flex-col gap-2 items-center justify-center flex-shrink-0 group relative w-[80px] sm:w-[100px] md:w-[120px] ${isRemoving ? 'animate-summoner-remove' : 'animate-summoner-join'}`} style={{ animationDelay: isRemoving ? '0ms' : `${index * 100}ms` }}>
       <div className="relative w-full flex justify-center items-center" style={{ paddingTop: '12px', paddingRight: '12px', paddingBottom: '8px', paddingLeft: '12px' }}>
-        <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-[100px] md:h-[100px] aspect-square bg-gradient-to-br from-zinc-300 to-zinc-400 dark:from-zinc-700 dark:to-zinc-800 rounded-full flex items-center justify-center overflow-hidden shadow-lg transition-all duration-300 group-hover:scale-110 flex-shrink-0 animate-summoner-glow">
-          {avatar ? (
-            <img 
-              src={avatar} 
-              alt={name}
-              className="w-full h-full object-cover rounded-full"
-            />
+        <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-[100px] md:h-[100px] aspect-square bg-gradient-to-br from-zinc-300 to-zinc-400 dark:from-zinc-700 dark:to-zinc-800 rounded-full flex items-center justify-center overflow-hidden shadow-lg transition-all duration-300 group-hover:scale-110 flex-shrink-0 animate-summoner-glow relative">
+          {profileIconUrl ? (
+            <>
+              <img 
+                src={profileIconUrl} 
+                alt={name}
+                className="w-full h-full object-cover rounded-full"
+              />
+              {summonerLevel && (
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-zinc-900/90 text-amber-400 text-[10px] sm:text-xs font-bold px-1.5 sm:px-2 py-0.5 rounded-full border border-amber-500/50">
+                  {summonerLevel}
+                </div>
+              )}
+            </>
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 dark:from-blue-600 dark:to-purple-700 flex items-center justify-center">
               <span className="text-white font-bold text-lg sm:text-xl md:text-2xl">

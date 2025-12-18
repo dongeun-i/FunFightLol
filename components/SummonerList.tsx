@@ -2,11 +2,7 @@
 
 import { useState } from "react";
 import SummonerCard from "./SummonerCard";
-
-interface Summoner {
-  name: string;
-  avatar?: string;
-}
+import { Summoner } from "@/lib/types";
 
 interface SummonerListProps {
   summoners: Summoner[];
@@ -39,7 +35,8 @@ export default function SummonerList({
           <SummonerCard
             key={`${summoner.name}-${index}`}
             name={summoner.name}
-            avatar={summoner.avatar}
+            profileIconId={summoner.profileIconId}
+            summonerLevel={summoner.summonerLevel}
             onRemove={onRemove ? () => handleRemove(index) : undefined}
             index={index}
             isRemoving={removingIndex === index}
