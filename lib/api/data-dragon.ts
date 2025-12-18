@@ -73,11 +73,48 @@ export function getItemIconUrl(itemId: number): string {
 }
 
 /**
+ * 소환사 주문 ID를 이름으로 매핑
+ */
+const SUMMONER_SPELL_MAP: Record<number, string> = {
+  1: "SummonerBoost", // 정화
+  3: "SummonerExhaust", // 탈진
+  4: "SummonerFlash", // 점멸
+  6: "SummonerHaste", // 유체화
+  7: "SummonerHeal", // 회복
+  11: "SummonerSmite", // 강타
+  12: "SummonerTeleport", // 순간이동
+  13: "SummonerMana", // 명상
+  14: "SummonerDot", // 점화
+  21: "SummonerBarrier", // 방어막
+  30: "SummonerPoroRecall", // 포로 소환
+  31: "SummonerPoroThrow", // 포로 던지기
+  32: "SummonerSnowball", // 마크/돌진
+  39: "SummonerSnowURFSnowball_Mark", // URF 마크
+  54: "Summoner_UltBookPlaceholder", // 궁극기 책 (아레나)
+  55: "Summoner_UltBookSmitePlaceholder", // 궁극기 책 강타
+};
+
+/**
+ * 소환사 주문 ID를 이름으로 변환
+ */
+export function getSummonerSpellName(spellId: number): string {
+  return SUMMONER_SPELL_MAP[spellId] || "SummonerFlash";
+}
+
+/**
  * 소환사 주문 이미지 URL
  * @param spellName 소환사 주문 이름 (예: "SummonerFlash", "SummonerDot")
  */
 export function getSummonerSpellIconUrl(spellName: string): string {
   return `${DATA_DRAGON_BASE_URL}/${LATEST_VERSION}/img/spell/${spellName}.png`;
+}
+
+/**
+ * 소환사 주문 ID로 이미지 URL 가져오기
+ */
+export function getSummonerSpellIconUrlById(spellId: number): string {
+  const spellName = getSummonerSpellName(spellId);
+  return getSummonerSpellIconUrl(spellName);
 }
 
 /**

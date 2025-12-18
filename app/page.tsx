@@ -38,7 +38,7 @@ export default function Home() {
     // 최대 인원 확인
     const validation = canAddSummoner(summoners);
     if (!validation.isValid) {
-      setError(validation.message);
+      setError(validation.message || "소환사를 추가할 수 없습니다.");
       return;
     }
     

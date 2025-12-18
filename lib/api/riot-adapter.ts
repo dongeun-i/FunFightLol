@@ -34,6 +34,16 @@ export function convertRiotMatchToMatchStats(
     return mapNames[gameMode] || gameMode;
   };
 
+  // 아이템 배열 생성 (0이 아닌 아이템만)
+  const items = [
+    participant.item0,
+    participant.item1,
+    participant.item2,
+    participant.item3,
+    participant.item4,
+    participant.item5,
+  ].filter(itemId => itemId !== 0);
+
   return {
     matchId: match.metadata.matchId,
     summonerName: participant.summonerName,
@@ -48,6 +58,10 @@ export function convertRiotMatchToMatchStats(
     timestamp: match.info.gameCreation,
     gameMode: match.info.gameMode,
     mapName: getMapName(match.info.gameMode),
+    summoner1Id: participant.summoner1Id,
+    summoner2Id: participant.summoner2Id,
+    items,
+    champLevel: participant.champLevel,
   };
 }
 

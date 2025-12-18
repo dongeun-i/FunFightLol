@@ -16,6 +16,18 @@ function generateDummyMatch(summonerName: string, matchNumber: number): MatchSta
   const gameModes = ["CLASSIC", "ARAM"];
   const gameMode = gameModes[Math.floor(Math.random() * gameModes.length)];
   
+  // 소환사 주문 (플래시는 거의 필수, 나머지는 랜덤)
+  const summonerSpells = [4, 11, 12, 14, 3, 7, 21]; // 플래시, 강타, 순간이동, 점화, 탈진, 힐, 방어막
+  const spell1 = 4; // 플래시 고정
+  const spell2 = summonerSpells[Math.floor(Math.random() * summonerSpells.length)];
+  
+  // 랜덤 아이템 (일반적인 아이템 ID들)
+  const commonItems = [3153, 3006, 3031, 3094, 3033, 3036, 3074, 3078, 3089, 3100, 3135, 3142, 3508];
+  const itemCount = Math.floor(Math.random() * 3) + 3; // 3~5개 아이템
+  const items = Array(itemCount)
+    .fill(0)
+    .map(() => commonItems[Math.floor(Math.random() * commonItems.length)]);
+  
   return {
     matchId: `match-${Date.now()}-${matchNumber}`,
     summonerName,
@@ -30,6 +42,10 @@ function generateDummyMatch(summonerName: string, matchNumber: number): MatchSta
     timestamp: Date.now() - (matchNumber * 1000 * 60 * 30), // 30분 간격
     gameMode,
     mapName: gameMode === "CLASSIC" ? "소환사의 협곡" : "칼바람 나락",
+    summoner1Id: spell1,
+    summoner2Id: spell2,
+    items,
+    champLevel: Math.floor(Math.random() * 6) + 13, // 13~18 레벨
   };
 }
 
@@ -183,14 +199,14 @@ export default function GamePage() {
         {/* 챌린지 리더보드 */}
         {session.challengeOptions && (
           <div className="mb-6 sm:mb-8">
-            <h2 className="text-lg font-medium text-black dark:text-zinc-50 mb-4">
+            <h2 className="text-base sm:text-lg font-medium text-black dark:text-zinc-50 mb-3 sm:mb-4">
               챌린지 리더보드
             </h2>
-            <div className="p-4 sm:p-6 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800">
-              <h3 className="text-lg font-semibold text-black dark:text-zinc-50 mb-4">
+            <div className="p-3 sm:p-4 md:p-6 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800">
+              <h3 className="text-base sm:text-lg font-semibold text-black dark:text-zinc-50 mb-3 sm:mb-4">
                 {CHALLENGE_LABELS[session.challengeOptions]}
               </h3>
-              <div className="space-y-3 mb-4">
+              <div className="space-y-2 sm:space-y-3 mb-3 sm:mb-4">
                 {leaderboard.map((stat, index) => {
                   const firstPlaceValue = leaderboard[0]?.total || 0;
                   const gap = index > 0 && firstPlaceValue > 0 ? firstPlaceValue - stat.total : 0;
@@ -198,11 +214,11 @@ export default function GamePage() {
                   return (
                     <div
                       key={stat.summoner.name}
-                      className="flex items-center justify-between"
+                      className="flex items-center justify-between p-2 sm:p-0"
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                         <span
-                          className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                          className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0 ${
                             index === 0
                               ? "bg-yellow-500 text-white"
                               : index === 1
@@ -214,18 +230,18 @@ export default function GamePage() {
                         >
                           {index + 1}
                         </span>
-                        <span className="text-black dark:text-zinc-50">
+                        <span className="text-sm sm:text-base text-black dark:text-zinc-50 truncate">
                           {stat.summoner.name}
                         </span>
                       </div>
-                      <div className="flex flex-col items-end">
-                        <span className="font-semibold text-black dark:text-zinc-50">
+                      <div className="flex flex-col items-end flex-shrink-0">
+                        <span className="text-sm sm:text-base font-semibold text-black dark:text-zinc-50">
                           {session.challengeOptions === "kda"
                             ? stat.total.toFixed(2)
                             : stat.total.toLocaleString()}
                         </span>
                         {gap > 0 && (
-                          <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                          <span className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400">
                             {session.challengeOptions === "kda"
                               ? `(-${gap.toFixed(2)})`
                               : `(-${gap.toLocaleString()})`}
@@ -238,7 +254,7 @@ export default function GamePage() {
               </div>
               {/* 미니 그래프 */}
               {session.matches.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-700">
+                <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-zinc-200 dark:border-zinc-700">
                   <StatChart
                     data={leaderboard.map((stat) => ({
                       name: stat.summoner.name.length > 6 

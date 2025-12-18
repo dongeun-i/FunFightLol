@@ -2,6 +2,8 @@ export interface Summoner {
   name: string;
   avatar?: string;
   puuid?: string;
+  profileIconId?: number;
+  summonerLevel?: number;
 }
 
 export interface ChallengeOption {
@@ -25,6 +27,12 @@ export interface MatchStats {
   timestamp: number;
   gameMode?: string; // 게임 모드 (예: "CLASSIC", "ARAM")
   mapName?: string; // 맵 이름 (예: "소환사의 협곡", "칼바람 나락")
+  summoner1Id?: number; // 소환사 주문 1 ID
+  summoner2Id?: number; // 소환사 주문 2 ID
+  summoner1?: string; // 소환사 주문 1 이름 (예: "SummonerFlash")
+  summoner2?: string; // 소환사 주문 2 이름 (예: "SummonerDot")
+  items?: number[]; // 아이템 ID 배열
+  champLevel?: number; // 챔피언 레벨
 }
 
 export interface Handicap {

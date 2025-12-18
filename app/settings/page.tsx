@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/Button";
 import Header from "@/components/Header";
-import { Handicap } from "@/lib/types";
+import { Handicap, MatchStats } from "@/lib/types";
 import { getSummoners, saveSession } from "@/lib/storage";
 import { CHALLENGE_OPTIONS, DEFAULT_SCORE_CONFIG } from "@/lib/constants";
 import {

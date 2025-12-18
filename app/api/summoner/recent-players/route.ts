@@ -39,11 +39,11 @@ export async function POST(request: NextRequest) {
       const currentPlayer = match.info.participants.find(p => p.puuid === puuid);
       if (!currentPlayer) continue;
 
-      const currentTeam = currentPlayer.team;
+      const currentTeam = currentPlayer.teamId;
 
       // 같은 팀의 다른 소환사들 추가
       match.info.participants
-        .filter(p => p.team === currentTeam && p.puuid !== puuid)
+        .filter(p => p.teamId === currentTeam && p.puuid !== puuid)
         .forEach(p => recentPlayerPuuids.add(p.puuid));
     }
 

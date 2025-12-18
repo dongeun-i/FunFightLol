@@ -64,10 +64,10 @@ export default function StatChart({
 
   return (
     <div className="[&_.recharts-active-bar]:!fill-transparent [&_.recharts-active-bar]:!stroke-transparent [&_.recharts-bar-rectangle]:focus:!outline-none [&_.recharts-active-bar]:!outline-none [&_.recharts-tooltip-wrapper]:!hidden [&_.recharts-cursor]:!hidden [&_.recharts-bar-rectangle]:!cursor-default [&_*]:!user-select-none [&_*]:!ring-0 [&_*]:focus:!ring-0 [&_*]:focus-visible:!ring-0">
-      <ResponsiveContainer width="100%" height={250}>
+      <ResponsiveContainer width="100%" height={200} className="sm:h-[250px]">
         <ChartComponent
           data={data}
-          margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
+          margin={{ top: 15, right: 5, left: -10, bottom: 5 }}
           onClick={() => {}}
           onMouseDown={() => {}}
           onMouseUp={() => {}}
@@ -75,14 +75,15 @@ export default function StatChart({
           <CartesianGrid strokeDasharray="3 3" className="stroke-zinc-300 dark:stroke-zinc-700" />
           <XAxis
             dataKey="name"
-            className="text-xs fill-zinc-600 dark:fill-zinc-400"
+            className="text-[10px] sm:text-xs fill-zinc-600 dark:fill-zinc-400"
             tick={{ fill: "currentColor" }}
           />
           <YAxis
-            className="text-xs fill-zinc-600 dark:fill-zinc-400"
+            className="text-[10px] sm:text-xs fill-zinc-600 dark:fill-zinc-400"
             tick={{ fill: "currentColor" }}
             tickFormatter={formatNumber}
             domain={yAxisDomain}
+            width={35}
           />
           {type === "bar" ? (
             <Bar
@@ -100,7 +101,8 @@ export default function StatChart({
               label={{
                 position: "top",
                 fill: color,
-                fontSize: 11,
+                fontSize: 10,
+                fontWeight: 600,
                 formatter: (value: any) => {
                   const numValue = typeof value === 'number' ? value : parseFloat(value);
                   if (isNaN(numValue)) return '';

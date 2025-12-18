@@ -93,14 +93,14 @@ export default function ResultPage() {
         {/* 챌린지 결과 */}
         {session.challengeOptions && (
           <div className="mb-8 sm:mb-10">
-            <h2 className="text-xl font-semibold text-black dark:text-zinc-50 mb-4">
+            <h2 className="text-lg sm:text-xl font-semibold text-black dark:text-zinc-50 mb-3 sm:mb-4">
               챌린지 결과
             </h2>
-            <div className="p-4 sm:p-6 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800">
-              <h3 className="text-lg font-semibold text-black dark:text-zinc-50 mb-4">
+            <div className="p-3 sm:p-4 md:p-6 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800">
+              <h3 className="text-base sm:text-lg font-semibold text-black dark:text-zinc-50 mb-3 sm:mb-4">
                 {CHALLENGE_LABELS[session.challengeOptions]}
               </h3>
-              <div className="space-y-3 mb-4">
+              <div className="space-y-2 sm:space-y-3 mb-3 sm:mb-4">
                 {leaderboard.map((stat, index) => {
                   const firstPlaceValue = leaderboard[0]?.total || 0;
                   const gap = index > 0 && firstPlaceValue > 0 ? firstPlaceValue - stat.total : 0;
@@ -108,15 +108,15 @@ export default function ResultPage() {
                   return (
                     <div
                       key={stat.summoner.name}
-                      className={`p-3 rounded-lg flex items-center justify-between ${
+                      className={`p-2 sm:p-3 rounded-lg flex items-center justify-between ${
                         index === 0
                           ? "bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-400"
                           : "bg-white dark:bg-zinc-800"
                       }`}
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                         <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+                          className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0 ${
                             index === 0
                               ? "bg-yellow-500 text-white"
                               : index === 1
@@ -128,30 +128,30 @@ export default function ResultPage() {
                         >
                           {index + 1}
                         </div>
-                        <div>
-                          <div className="font-semibold text-black dark:text-zinc-50">
+                        <div className="min-w-0">
+                          <div className="text-sm sm:text-base font-semibold text-black dark:text-zinc-50 truncate">
                             {stat.summoner.name}
                           </div>
-                          <div className="text-xs text-zinc-600 dark:text-zinc-400">
+                          <div className="text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400">
                             {stat.matches}판 • 승률 {stat.winRate.toFixed(1)}%
                           </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-bold text-black dark:text-zinc-50">
+                      <div className="text-right flex-shrink-0">
+                        <div className="text-sm sm:text-base font-bold text-black dark:text-zinc-50">
                           {session.challengeOptions === "kda"
                             ? stat.average.toFixed(2)
                             : stat.total.toLocaleString()}
                         </div>
                         {gap > 0 && (
-                          <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                          <div className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400">
                             {session.challengeOptions === "kda"
                               ? `(-${gap.toFixed(2)})`
                               : `(-${gap.toLocaleString()})`}
                           </div>
                         )}
                         {session.challengeOptions !== "kda" && session.challengeOptions !== "score" && gap === 0 && (
-                          <div className="text-xs text-zinc-600 dark:text-zinc-400">
+                          <div className="text-[10px] sm:text-xs text-zinc-600 dark:text-zinc-400">
                             평균: {stat.average.toLocaleString()}
                           </div>
                         )}
@@ -161,7 +161,7 @@ export default function ResultPage() {
                 })}
               </div>
               {/* 결과 그래프 */}
-              <div className="pt-4 border-t border-zinc-200 dark:border-zinc-700">
+              <div className="pt-3 sm:pt-4 border-t border-zinc-200 dark:border-zinc-700">
                 <StatChart
                   data={leaderboard.map((stat) => ({
                     name: stat.summoner.name.length > 6 

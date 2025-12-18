@@ -66,6 +66,17 @@ export interface RiotParticipant {
   totalMinionsKilled: number;
   neutralMinionsKilled: number;
   win: boolean;
+  summoner1Id: number;
+  summoner2Id: number;
+  item0: number;
+  item1: number;
+  item2: number;
+  item3: number;
+  item4: number;
+  item5: number;
+  item6: number; // 장신구
+  champLevel: number;
+  teamId: number; // 팀 ID (100 = 블루팀, 200 = 레드팀)
 }
 
 /**
