@@ -11,19 +11,27 @@ export default function ThemeToggle() {
     setMounted(true);
   }, []);
 
+  const toggleTheme = () => {
+    const currentTheme = theme || "light";
+    setTheme(currentTheme === "dark" ? "light" : "dark");
+  };
+
   if (!mounted) {
     return (
-      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-zinc-200 dark:bg-zinc-800 animate-pulse" />
+      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-zinc-200 dark:bg-zinc-800 animate-pulse" />
     );
   }
 
+  const isDark = theme === "dark";
+
   return (
     <button
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      onClick={toggleTheme}
       className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-all duration-200 hover:scale-110 active:scale-95"
       aria-label="다크모드 토글"
+      type="button"
     >
-      {theme === "dark" ? (
+      {isDark ? (
         <svg
           className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-800 dark:text-zinc-200 transition-transform duration-300"
           fill="none"
@@ -55,6 +63,7 @@ export default function ThemeToggle() {
     </button>
   );
 }
+
 
 
 

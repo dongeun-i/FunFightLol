@@ -80,12 +80,20 @@ export default function ResultPage() {
         (h) => h.optionId === optionId && h.summonerName === summoner.name
       );
       if (handicap) {
-        total += handicap.value;
-        // KDA의 경우 핸디캡 적용 후에도 소수점 2째자리로 반올림
-        if (optionId === "kda") {
+        if (optionId === "damage" || optionId === "gold") {
+          // 딜량/골드는 %로 적용 (예: 10% = 1.1배)
+          total = total * (1 + handicap.value / 100);
+          average = summonerMatches.length > 0 ? total / summonerMatches.length : 0;
+        } else if (optionId === "kda") {
+          // KDA는 직접 더하기
+          total = total + handicap.value;
           total = parseFloat(total.toFixed(2));
+          average = total;
+        } else {
+          // 점수는 직접 더하기
+          total += handicap.value;
+          average = summonerMatches.length > 0 ? total / summonerMatches.length : 0;
         }
-        average = summonerMatches.length > 0 ? total / summonerMatches.length : 0;
       }
 
       const wins = summonerMatches.filter((m) => m.win).length;
@@ -137,8 +145,8 @@ export default function ResultPage() {
   const gameDuration = Math.floor((Date.now() - session.startTime) / 1000 / 60);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white dark:bg-zinc-950 font-sans">
-      <main className="flex min-h-screen w-full max-w-7xl flex-col py-8 sm:py-16 px-4 sm:px-8 bg-white dark:bg-zinc-950 relative">
+    <div className="flex min-h-screen items-center justify-center font-sans">
+      <main className="flex min-h-screen w-full max-w-7xl flex-col py-8 sm:py-16 px-4 sm:px-8 relative">
         {/* 헤더 */}
         <Header />
         

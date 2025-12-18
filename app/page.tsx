@@ -50,8 +50,8 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white dark:bg-zinc-950 font-sans">
-      <main className="flex min-h-screen w-full max-w-4xl flex-col md:py-16 px-4 sm:px-8 md:px-16 bg-white dark:bg-zinc-950 relative">
+    <div className="flex min-h-screen items-center justify-center font-sans">
+      <main className="flex min-h-screen w-full max-w-4xl flex-col md:py-16 px-4 sm:px-8 md:px-16 relative">
         {/* 헤더 */}
         <Header />
         <div className="flex flex-col gap-6 sm:gap-8 md:gap-10 mt-10 sm:mt-12 md:mt-16">

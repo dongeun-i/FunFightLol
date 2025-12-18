@@ -195,7 +195,7 @@ export default function SettingsPage() {
     },
     {
       title: "4/4 핸디캡 설정",
-      content: "각 소환사에게 핸디캡을 부여할 수 있습니다. 실력 차이가 있을 때 공정한 경쟁을 위해 사용하세요."
+      content: "각 소환사에게 핸디캡을 부여할 수 있습니다. 딜량/골드는 %로, KDA는 직접 더하기, 점수는 직접 더하기 형식으로 적용됩니다."
     }
   ];
 
@@ -226,8 +226,8 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white dark:bg-zinc-950 font-sans">
-      <main className="flex min-h-screen w-full max-w-5xl flex-col md:py-16 px-4 sm:px-8 md:px-16 bg-white dark:bg-zinc-950 relative">
+    <div className="flex min-h-screen items-center justify-center font-sans">
+      <main className="flex min-h-screen w-full max-w-5xl flex-col md:py-16 px-4 sm:px-8 md:px-16 relative">
         {/* 헤더 */}
         <Header />
         {/* 페이지 헤더 */}
@@ -507,21 +507,58 @@ export default function SettingsPage() {
                   ? "animate-fade-out-slide-up"
                   : ""
               }`}>
-                {summoners.map((summoner) => (
-                  <div key={summoner.name} className="flex items-center gap-3">
-                    <label className="text-sm text-black dark:text-zinc-50 w-24 truncate">
-                      {summoner.name}
-                    </label>
-                    <input
-                      type="number"
-                      value={handicaps[summoner.name] || 0}
-                      onChange={(e) => updateHandicap(summoner.name, parseInt(e.target.value) || 0)}
-                      onFocus={(e) => e.target.select()}
-                      className="flex-1 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-zinc-800 text-black dark:text-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-500 text-left"
-                      placeholder="0"
-                    />
-                  </div>
-                ))}
+                {summoners.map((summoner) => {
+                  const isPercentage = selectedOption === "damage" || selectedOption === "gold";
+                  const isKDA = selectedOption === "kda";
+                  const unit = isPercentage ? "%" : isKDA ? "KDA" : "";
+                  const placeholder = isPercentage ? "0%" : isKDA ? "0.00" : "0";
+                  const description = isPercentage 
+                    ? "딜량/골드에 비율로 적용됩니다 (예: 10 = 10% 증가)"
+                    : isKDA
+                    ? "KDA에 직접 더해집니다 (예: 1.5 입력 시 KDA +1.5)"
+                    : "점수에 직접 더해집니다";
+                  
+                  return (
+                    <div key={summoner.name} className="space-y-1">
+                      <div className="flex items-center gap-3">
+                        <label className="text-sm text-black dark:text-zinc-50 w-24 truncate">
+                          {summoner.name}
+                        </label>
+                        <div className="flex-1 flex items-center gap-2">
+                          <input
+                            type="number"
+                            step={isKDA ? "0.01" : "1"}
+                            value={handicaps[summoner.name] || ""}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val === "") {
+                                updateHandicap(summoner.name, 0);
+                              } else {
+                                const numVal = isKDA ? parseFloat(val) : parseInt(val);
+                                if (!isNaN(numVal)) {
+                                  updateHandicap(summoner.name, numVal);
+                                }
+                              }
+                            }}
+                            onFocus={(e) => e.target.select()}
+                            className="flex-1 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-zinc-800 text-black dark:text-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-500 text-left"
+                            placeholder={placeholder}
+                          />
+                          {unit && (
+                            <span className="text-sm text-zinc-600 dark:text-zinc-400 min-w-[2.5rem]">
+                              {unit}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {description && (
+                        <p className="text-xs text-zinc-500 dark:text-zinc-500 ml-28">
+                          {description}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
