@@ -13,6 +13,9 @@ import { CHALLENGE_LABELS } from "@/lib/constants";
 
 // 더미 매치 데이터 생성 함수
 function generateDummyMatch(summonerName: string, matchNumber: number): MatchStats {
+  const gameModes = ["CLASSIC", "ARAM"];
+  const gameMode = gameModes[Math.floor(Math.random() * gameModes.length)];
+  
   return {
     matchId: `match-${Date.now()}-${matchNumber}`,
     summonerName,
@@ -25,6 +28,8 @@ function generateDummyMatch(summonerName: string, matchNumber: number): MatchSta
     assists: Math.floor(Math.random() * 20),
     win: Math.random() > 0.5,
     timestamp: Date.now() - (matchNumber * 1000 * 60 * 30), // 30분 간격
+    gameMode,
+    mapName: gameMode === "CLASSIC" ? "소환사의 협곡" : "칼바람 나락",
   };
 }
 
@@ -53,10 +58,28 @@ export default function GamePage() {
       scoreConfig: saved.scoreConfig,
       handicaps: saved.handicaps,
       invalidMatches: saved.invalidMatches || [],
+      testMatches: saved.testMatches,
     };
 
     setSession(gameSession);
     setIsLoading(false);
+
+    // 테스트 모드: testMatches가 있고 matches가 비어있으면 자동으로 추가
+    if (saved.testMatches && saved.testMatches.length > 0 && (!saved.matches || saved.matches.length === 0)) {
+      console.log('[Game Page] 테스트 매치 감지, 1초 후 자동 추가...', saved.testMatches);
+      setTimeout(() => {
+        console.log('[Game Page] 테스트 매치 추가 중...');
+        
+        const updatedSession: GameSession = {
+          ...gameSession,
+          matches: saved.testMatches!,
+        };
+
+        setSession(updatedSession);
+        saveSession(updatedSession);
+        console.log('[Game Page] 테스트 매치 추가 완료!');
+      }, 1000); // 1초 후 자동 추가
+    }
   }, [router]);
 
   const handleRefresh = () => {

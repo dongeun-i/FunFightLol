@@ -21,6 +21,10 @@ export default function MatchRow({ matches, challengeOptions, matchNumber, isInv
   const totalPlayers = matches.length;
   const isFullSize = totalPlayers >= maxPlayers;
 
+  // 게이지바를 위한 최대값 계산
+  const maxDamage = Math.max(...matches.map(m => m.damage), 1);
+  const maxGold = Math.max(...matches.map(m => m.gold), 1);
+
   return (
     <div className={`mb-4 sm:mb-6 ${isInvalid ? 'opacity-50' : ''}`}>
       {/* 매치 헤더 */}
@@ -34,9 +38,12 @@ export default function MatchRow({ matches, challengeOptions, matchNumber, isInv
               무효
             </span>
           )}
-          <span className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
-            ({winners.length}승 vs {losers.length}패)
-          </span>
+          {/* 맵 정보 */}
+          {matches[0]?.mapName && (
+            <span className="text-xs sm:text-sm px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded">
+              {matches[0].mapName}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {onToggleInvalid && (
@@ -68,6 +75,8 @@ export default function MatchRow({ matches, challengeOptions, matchNumber, isInv
             match={match}
             challengeOptions={challengeOptions}
             isCompact={!isFullSize}
+            maxDamage={maxDamage}
+            maxGold={maxGold}
           />
         ))}
         {totalPlayers > maxPlayers && (

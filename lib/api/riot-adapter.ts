@@ -21,6 +21,19 @@ export function convertRiotMatchToMatchStats(
     return null;
   }
 
+  // 맵 정보 파싱
+  const getMapName = (gameMode: string) => {
+    const mapNames: Record<string, string> = {
+      "CLASSIC": "소환사의 협곡",
+      "ARAM": "칼바람 나락",
+      "ONEFORALL": "단일 챔피언",
+      "URF": "U.R.F",
+      "TUTORIAL": "튜토리얼",
+      "NEXUSBLITZ": "돌격 넥서스",
+    };
+    return mapNames[gameMode] || gameMode;
+  };
+
   return {
     matchId: match.metadata.matchId,
     summonerName: participant.summonerName,
@@ -33,6 +46,8 @@ export function convertRiotMatchToMatchStats(
     assists: participant.assists,
     win: participant.win,
     timestamp: match.info.gameCreation,
+    gameMode: match.info.gameMode,
+    mapName: getMapName(match.info.gameMode),
   };
 }
 

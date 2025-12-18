@@ -23,6 +23,8 @@ export interface MatchStats {
   assists: number;
   win: boolean;
   timestamp: number;
+  gameMode?: string; // 게임 모드 (예: "CLASSIC", "ARAM")
+  mapName?: string; // 맵 이름 (예: "소환사의 협곡", "칼바람 나락")
 }
 
 export interface Handicap {
@@ -46,6 +48,7 @@ export interface GameSession {
     csPerPoint: number; // CS 몇 개당 1점 (예: 10이면 CS 10개당 1점)
   };
   invalidMatches?: string[]; // 무효로 처리된 매치 ID 목록
+  testMatches?: MatchStats[]; // 테스트 모드용 매치 데이터 (모든 소환사)
 }
 
 

@@ -14,6 +14,8 @@ import {
   getHandicapStep,
 } from "@/lib/handicap";
 import { isChallengeSelected } from "@/lib/validators";
+import { getTestMatchClient } from "@/lib/client-api";
+import { convertRiotMatchesToMatchStats } from "@/lib/api/riot-adapter";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -28,6 +30,7 @@ export default function SettingsPage() {
   const [isHandicapPanelVisible, setIsHandicapPanelVisible] = useState<boolean>(false);
   const [showTooltip, setShowTooltip] = useState<boolean>(false);
   const [tooltipStep, setTooltipStep] = useState<number>(1);
+  const [isLoadingTest, setIsLoadingTest] = useState<boolean>(false);
   const scoreConfigRef = useRef<HTMLDivElement>(null);
   const handicapRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -206,6 +209,74 @@ export default function SettingsPage() {
     });
 
     router.push("/game");
+  };
+
+  const handleTestStart = async () => {
+    // 유효성 검사
+    const validation = isChallengeSelected(selectedOption);
+    if (!validation.isValid) {
+      alert(validation.message);
+      return;
+    }
+
+    // 모든 소환사가 PUUID를 가지고 있는지 확인
+    const allHavePuuid = summoners.every(s => s.puuid);
+    if (!allHavePuuid) {
+      alert("일부 소환사의 정보가 올바르지 않습니다. 다시 등록해주세요.");
+      return;
+    }
+
+    setIsLoadingTest(true);
+
+    try {
+      // 모든 소환사가 함께한 최근 매치 조회
+      const puuids = summoners.map(s => s.puuid);
+      const match = await getTestMatchClient(puuids);
+
+      // 각 소환사별로 매치 데이터 변환
+      const allMatchStats: MatchStats[] = [];
+      for (const puuid of puuids) {
+        const stats = convertRiotMatchesToMatchStats([match], puuid);
+        if (stats.length > 0) {
+          allMatchStats.push(stats[0]);
+        }
+      }
+
+      if (allMatchStats.length === 0) {
+        alert("매치 데이터를 변환하는데 실패했습니다.");
+        setIsLoadingTest(false);
+        return;
+      }
+
+      console.log('[Settings] 변환된 매치 데이터:', allMatchStats);
+
+      // 핸디캡을 배열 형태로 변환
+      const handicapArray: Handicap[] = [];
+      Object.entries(handicaps).forEach(([summonerName, value]) => {
+        if (value !== 0) {
+          handicapArray.push({ optionId: selectedOption, summonerName, value });
+        }
+      });
+
+      // 세션에 빈 매치 배열로 시작 (게임 페이지에서 보여주기 위해)
+      saveSession({
+        challengeOptions: selectedOption,
+        startTime: Date.now(),
+        matches: [], // 빈 배열로 시작
+        maxMatches: 1, // 테스트 모드는 1경기만
+        scoreConfig: selectedOption === "score" ? scoreConfig : undefined,
+        handicaps: handicapArray.length > 0 ? handicapArray : undefined,
+        testMatches: allMatchStats, // 모든 소환사의 매치 데이터 저장
+      });
+
+      // 게임 진행 페이지로 이동 (진행 상황 보기)
+      router.push("/game");
+    } catch (error: any) {
+      console.error("Test match load error:", error);
+      alert(error.message || "테스트 매치를 불러오는데 실패했습니다.");
+    } finally {
+      setIsLoadingTest(false);
+    }
   };
 
   return (
@@ -543,24 +614,42 @@ export default function SettingsPage() {
         )}
 
         {/* 버튼 영역 */}
-        <div className=" pt-4 flex gap-3">
-          <Button
-            onClick={() => router.push("/")}
-            variant="outline"
-            size="md"
-            className="flex-1"
-          >
-            뒤로가기
-          </Button>
-          <Button
-            onClick={handleStart}
-            variant="primary"
-            size="md"
-            className="flex-1"
-            disabled={!selectedOption}
-          >
-            게임 시작
-          </Button>
+        <div className="pt-4 space-y-3">
+          {/* 테스트 모드 안내 */}
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3">
+            <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-400">
+              💡 <strong>테스트 모드:</strong> 실제 게임 없이 최근 함께한 매치 데이터로 바로 결과를 확인할 수 있습니다.
+            </p>
+          </div>
+          
+          <div className="flex gap-3">
+            <Button
+              onClick={() => router.push("/")}
+              variant="outline"
+              size="md"
+              className="flex-1"
+            >
+              뒤로가기
+            </Button>
+            <Button
+              onClick={handleTestStart}
+              variant="outline"
+              size="md"
+              className="flex-1"
+              disabled={!selectedOption || isLoadingTest}
+            >
+              {isLoadingTest ? '로딩 중...' : '테스트 모드'}
+            </Button>
+            <Button
+              onClick={handleStart}
+              variant="primary"
+              size="md"
+              className="flex-1"
+              disabled={!selectedOption}
+            >
+              게임 시작
+            </Button>
+          </div>
         </div>
       </main>
     </div>

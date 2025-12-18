@@ -10,13 +10,14 @@ import { Summoner } from "@/lib/types";
 import { saveSummoners, getSummoners } from "@/lib/storage";
 import { MAX_SUMMONERS } from "@/lib/constants";
 import { canAddSummoner, canStartGame } from "@/lib/validators";
-import { searchSummonerClient } from "@/lib/client-api";
+import { searchSummonerClient, getRecentPlayersClient } from "@/lib/client-api";
 
 export default function Home() {
   const router = useRouter();
   const [summoners, setSummoners] = useState<Summoner[]>([]);
   const [showTooltip, setShowTooltip] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingRecent, setIsLoadingRecent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -52,8 +53,8 @@ export default function Home() {
     setError(null);
 
     try {
-      // API로 소환사 검색
-      const result = await searchSummoner(riotId);
+      // API로 소환사 검색 (서버 라우트를 통해)
+      const result = await searchSummonerClient(riotId);
       
       const newSummoner: Summoner = { 
         name: result.summoner.name,
@@ -88,6 +89,62 @@ export default function Home() {
     const updated = summoners.filter((_, i) => i !== index);
     setSummoners(updated);
     saveSummoners(updated);
+  };
+
+  const handleLoadRecentPlayers = async () => {
+    if (summoners.length === 0) {
+      setError("먼저 소환사를 한 명 이상 등록해주세요.");
+      return;
+    }
+
+    setIsLoadingRecent(true);
+    setError(null);
+
+    try {
+      // 첫 번째 소환사의 최근 함께한 플레이어 조회
+      const firstSummoner = summoners[0];
+      if (!firstSummoner.puuid) {
+        setError("소환사 정보가 올바르지 않습니다.");
+        return;
+      }
+
+      const recentPlayers = await getRecentPlayersClient(firstSummoner.puuid, 3);
+
+      if (recentPlayers.length === 0) {
+        setError("최근 함께한 플레이어를 찾을 수 없습니다.");
+        return;
+      }
+
+      // 이미 등록된 소환사와 최대 인원 체크
+      const availableSlots = MAX_SUMMONERS - summoners.length;
+      const playersToAdd = recentPlayers
+        .filter(player => !summoners.some(s => s.puuid === player.puuid))
+        .slice(0, availableSlots);
+
+      if (playersToAdd.length === 0) {
+        setError("추가할 수 있는 새로운 플레이어가 없습니다.");
+        return;
+      }
+
+      // 소환사 목록에 추가
+      const newSummoners: Summoner[] = playersToAdd.map(player => ({
+        name: player.name,
+        puuid: player.puuid,
+        profileIconId: player.profileIconId,
+        summonerLevel: player.summonerLevel,
+      }));
+
+      const updated = [...summoners, ...newSummoners];
+      setSummoners(updated);
+      saveSummoners(updated);
+
+      setError(null);
+    } catch (err: any) {
+      console.error("Failed to load recent players:", err);
+      setError("최근 플레이어를 불러오는데 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      setIsLoadingRecent(false);
+    }
   };
 
   const handleNext = () => {
@@ -151,6 +208,19 @@ export default function Home() {
 
           {/* 소환사 검색 */}
           <SearchBar onSearch={handleSearch} isLoading={isLoading} />
+          
+          {/* 최근 함께한 친구 불러오기 버튼 */}
+          {summoners.length > 0 && summoners.length < MAX_SUMMONERS && (
+            <div className="flex justify-center">
+              <button
+                onClick={handleLoadRecentPlayers}
+                disabled={isLoadingRecent}
+                className="px-4 py-2 text-sm sm:text-base bg-amber-500/10 hover:bg-amber-500/20 border-2 border-amber-500/50 hover:border-amber-500 rounded-lg text-amber-600 dark:text-amber-400 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
+              >
+                {isLoadingRecent ? '불러오는 중...' : '최근 함께한 친구 불러오기'}
+              </button>
+            </div>
+          )}
           
           {/* 에러 메시지 */}
           {error && (

@@ -16,8 +16,10 @@ const RIOT_PLATFORM = "asia"; // 아시아 리전 (계정 정보용)
 const getApiBaseUrls = () => ({
   // 계정 정보 (Riot ID 기반)
   account: `https://${RIOT_PLATFORM}.api.riotgames.com`,
-  // 게임 데이터 (소환사, 매치 등)
-  game: `https://${getRiotRegion()}.api.riotgames.com`,
+  // 소환사 정보 (지역별)
+  summoner: `https://${getRiotRegion()}.api.riotgames.com`,
+  // 매치 데이터 (대륙별 - asia, americas, europe, sea)
+  match: `https://${RIOT_PLATFORM}.api.riotgames.com`,
 } as const);
 
 /**
@@ -114,7 +116,7 @@ export async function getAccountByRiotId(
  */
 export async function getSummonerByPUUID(puuid: string): Promise<RiotSummoner> {
   const baseUrls = getApiBaseUrls();
-  const url = `${baseUrls.game}/lol/summoner/v4/summoners/by-puuid/${puuid}`;
+  const url = `${baseUrls.summoner}/lol/summoner/v4/summoners/by-puuid/${puuid}`;
   return fetchRiotAPI<RiotSummoner>(url);
 }
 
@@ -128,7 +130,7 @@ export async function getMatchIdsByPUUID(
   count: number = 20
 ): Promise<string[]> {
   const baseUrls = getApiBaseUrls();
-  const url = `${baseUrls.game}/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=${count}`;
+  const url = `${baseUrls.match}/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=${count}`;
   return fetchRiotAPI<string[]>(url);
 }
 
@@ -137,7 +139,7 @@ export async function getMatchIdsByPUUID(
  */
 export async function getMatchById(matchId: string): Promise<RiotMatch> {
   const baseUrls = getApiBaseUrls();
-  const url = `${baseUrls.game}/lol/match/v5/matches/${matchId}`;
+  const url = `${baseUrls.match}/lol/match/v5/matches/${matchId}`;
   return fetchRiotAPI<RiotMatch>(url);
 }
 
